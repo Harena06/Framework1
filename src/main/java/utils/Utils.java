@@ -1,8 +1,11 @@
 package main.java.utils;
 
 import annotation.ControllerAnnotation;
+import annotation.UrlMapping;
+import framework.UrlMethod;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -67,5 +70,28 @@ public class Utils {
         }
 
         return result;
+    }
+
+    public static List<UrlMethod> scanUrlMappings(
+            String packageName,
+            Class<? extends Annotation> controllerAnnotation)
+            throws Exception {
+
+        List<UrlMethod> mappings = new ArrayList<>();
+        List<Class<?>> classes = scanClasses(packageName);
+
+        for (Class<?> clazz : classes) {
+            if (clazz.isAnnotationPresent(controllerAnnotation)) {
+                Method[] methods = clazz.getDeclaredMethods();
+                for (Method method : methods) {
+                    if (method.isAnnotationPresent(UrlMapping.class)) {
+                        UrlMapping mapping = method.getAnnotation(UrlMapping.class);
+                        mappings.add(new UrlMethod(mapping.value(), clazz, method));
+                    }
+                }
+            }
+        }
+
+        return mappings;
     }
 }
